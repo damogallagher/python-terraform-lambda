@@ -1,45 +1,46 @@
-provider "aws" {
-  region = "us-east-1"
-}
-
-variable "function_name" {
-  default = "minimal_lambda_function"
-}
-
-variable "handler" {
-  default = "lambda.handler"
-}
-
-variable "runtime" {
-  default = "python3.6"
-}
-
-resource "aws_lambda_function" "lambda_function" {
-  role             = "${aws_iam_role.lambda_exec_role.arn}"
-  handler          = "${var.handler}"
-  runtime          = "${var.runtime}"
-  filename         = "lambda.zip"
-  function_name    = "${var.function_name}"
-  source_code_hash = "${base64sha256(file("lambda.zip"))}"
-}
-
-resource "aws_iam_role" "lambda_exec_role" {
-  name        = "lambda_exec"
-  path        = "/"
-  description = "Allows Lambda Function to call AWS services on your behalf."
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.48.0"
     }
-  ]
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.1.0"
+    }
+    arch    ive = {
+      source  = "hashicorp/archive"
+      version = "~> 2.2.0"
+    }
+  }
+
+  required_version = "~> 1.0"
 }
-EOF
+
+provider "aws" {
+  region = var.aws_region
+}
+
+resource "aws_s3_bucket" "lambda_bucket" {
+  bucket = var.code_s3_bucket_name
+
+  acl           = "private"
+  force_destroy = true
+}
+
+
+data "archive_file" "minimal_lambda_function" {
+  type = "zip"
+
+  source_dir  = "${path.module}/lambda"
+  output_path = "${path.module}/lambda.zip"
+}
+
+resource "aws_s3_bucket_object" "minimal_lambda_function" {
+  bucket = aws_s3_bucket.lambda_bucket.id
+
+  key    = "lambda.zip"
+  source = data.archive_file.minimal_lambda_function.output_path
+
+  etag = filemd5(data.archive_file.minimal_lambda_function.output_path)
 }

@@ -4,4 +4,20 @@ zip lambda lambda.py
 
 ## Run from terraform directory
 terraform init
+export AWS_PROFILE=csx
 terraform apply
+
+# Quick Instructions
+rm -rf terraform/lambda.zip
+zip terraform/lambda lambda.py
+cd terraform
+terraform init
+export AWS_PROFILE=csx
+terraform apply --auto-approve
+cd ../
+
+# Destroy infrastructure
+cd terraform
+export AWS_PROFILE=csx
+terraform destroy --auto-approve
+cd ../
