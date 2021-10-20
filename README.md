@@ -22,7 +22,7 @@ terraform apply
 
 # Quick Instructions
 rm -rf terraform/lambda.zip
-zip terraform/lambda lambda.py
+zip terraform/lambda app/lambda.py
 cd terraform
 terraform init
 export AWS_PROFILE=csx
