@@ -1,4 +1,17 @@
 # Deploy to AWS Lambda 
+
+cd terraform
+terraform init
+export AWS_PROFILE=csx
+terraform apply --auto-approve
+
+# Destroy infrastructure
+cd terraform
+export AWS_PROFILE=csx
+terraform destroy --auto-approve
+
+
+### OLD
 ## Run from root of project
 zip lambda lambda.py
 
