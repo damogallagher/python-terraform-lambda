@@ -1,7 +1,3 @@
-variable "code_src_dir" {
-  type = string
-}
-
 variable "zip_name" {
   type = string
 }
@@ -14,24 +10,21 @@ variable "lambda_runtime" {
 variable "lambda_handler" {
   type = string
 }
-
-data "archive_file" "minimal_lambda_function" {
-  type = "zip"
-
-  source_dir  = "${path.module}/../../${var.code_src_dir}"
-  output_path = "${path.module}/${var.zip_name}"
+variable "lambda_function_output_path" {
+    type = string
+}
+variable "lambda_function_base64" {
+    type = string
 }
 
 resource "aws_s3_bucket_object" "minimal_lambda_function" {
   bucket = "${var.src_code_bucket_id}"
 
   key    = "${var.zip_name}"
-  source = data.archive_file.minimal_lambda_function.output_path
+  source = var.lambda_function_output_path
 
-  etag = filemd5(data.archive_file.minimal_lambda_function.output_path)
-  depends_on  = [data.archive_file.minimal_lambda_function]
+  etag = filemd5(var.lambda_function_output_path)
 }
-
 
 resource "aws_lambda_function" "minimal_lambda_function" {
   function_name = "MinimalLambdaFunction"
@@ -42,10 +35,10 @@ resource "aws_lambda_function" "minimal_lambda_function" {
   runtime = "${var.lambda_runtime}"
   handler = "${var.lambda_handler}"
 
-  source_code_hash = data.archive_file.minimal_lambda_function.output_base64sha256
+  source_code_hash = var.lambda_function_base64
 
   role = aws_iam_role.lambda_exec.arn
-  depends_on           = [data.archive_file.minimal_lambda_function]
+  depends_on           = [aws_s3_bucket_object.minimal_lambda_function]
 }
 
 resource "aws_cloudwatch_log_group" "minimal_lambda_function" {
@@ -155,8 +148,3 @@ output "s3_bucket_key" {
   value = aws_s3_bucket_object.minimal_lambda_function.key
 }
 
-output "archive_hash" {
-  description = "Hash of the archive."
-
-  value = data.archive_file.minimal_lambda_function.output_base64sha256
-}

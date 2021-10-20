@@ -2,6 +2,7 @@
 
 cd terraform
 terraform init
+terraform plan
 export AWS_PROFILE=csx
 terraform apply --auto-approve
 
