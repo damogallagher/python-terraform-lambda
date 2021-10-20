@@ -4,6 +4,9 @@ module "storage" {
   //depends_on           = [module.storage.storage_bucket_name]
 }
 
+//Found an issue where the archive functionality would not work with depends_on
+//When we try to push the artifact to s3 its not available
+//Only way around this is to do the archiving in a module and use the module depends_on
 module "archive_lambda_func" {
   source       = "./archive"
   code_src_dir = "app"
