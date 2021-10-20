@@ -6,7 +6,7 @@ module "storage" {
  
 module "lambda_func" {
   source   = "./compute"
-  code_src = "app"
+  code_src_dir = "app"
   zip_name = "lambda222.zip"
   src_code_bucket_id = module.storage.src_code_bucket_id
   lambda_runtime = var.lambda_runtime

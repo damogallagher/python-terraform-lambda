@@ -1,6 +1,7 @@
-variable "code_src" {
+variable "code_src_dir" {
   type = string
 }
+
 variable "zip_name" {
   type = string
 }
@@ -14,22 +15,23 @@ variable "lambda_handler" {
   type = string
 }
 
-module "archive" {
-  source   = "./archive"
-  code_src = var.code_src
-  zip_name = var.zip_name
-}
+data "archive_file" "minimal_lambda_function" {
+  type = "zip"
 
+  source_dir  = "${path.module}/../../${var.code_src_dir}"
+  output_path = "${path.module}/${var.zip_name}"
+}
 
 resource "aws_s3_bucket_object" "minimal_lambda_function" {
   bucket = "${var.src_code_bucket_id}"
 
   key    = "${var.zip_name}"
-  source = module.archive.archive_output_path
+  source = data.archive_file.minimal_lambda_function.output_path
 
-  etag = filemd5(module.archive.archive_output_path)
-  depends_on           = [module.archive.archive_output_path]
+  etag = filemd5(data.archive_file.minimal_lambda_function.output_path)
+  depends_on  = [data.archive_file.minimal_lambda_function]
 }
+
 
 resource "aws_lambda_function" "minimal_lambda_function" {
   function_name = "MinimalLambdaFunction"
@@ -40,10 +42,10 @@ resource "aws_lambda_function" "minimal_lambda_function" {
   runtime = "${var.lambda_runtime}"
   handler = "${var.lambda_handler}"
 
-  source_code_hash = module.archive.archive_hash
+  source_code_hash = data.archive_file.minimal_lambda_function.output_base64sha256
 
   role = aws_iam_role.lambda_exec.arn
-  depends_on           = [module.archive.archive_hash]
+  depends_on           = [data.archive_file.minimal_lambda_function]
 }
 
 resource "aws_cloudwatch_log_group" "minimal_lambda_function" {
@@ -145,4 +147,16 @@ output "base_url" {
   description = "Base URL for API Gateway stage."
 
   value = aws_apigatewayv2_stage.lambda.invoke_url
+}
+
+output "s3_bucket_key" {
+  description = "Key for the archived file in S3."
+
+  value = aws_s3_bucket_object.minimal_lambda_function.key
+}
+
+output "archive_hash" {
+  description = "Hash of the archive."
+
+  value = data.archive_file.minimal_lambda_function.output_base64sha256
 }
