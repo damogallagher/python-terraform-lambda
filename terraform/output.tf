@@ -6,11 +6,11 @@ output "lambda_bucket_id" {
 output "lambdafunc_function_name" {
   description = "Name of the Lambda function."
 
-  value = module.lambda_func.function_name
+  value = module.lambda_func_1.function_name
 }
 
-output "lambdafunc_base_url" {
+output "APIGateway_base_url" {
   description = "Base URL for API Gateway stage."
 
-  value = module.lambda_func.base_url
+  value = module.api-gateway.base_url
 }

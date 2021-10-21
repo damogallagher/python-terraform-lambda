@@ -17,3 +17,10 @@ variable "lambda_runtime" {
 variable "lambda_handler" {
   default = "lambda.handler"
 }
+
+variable "api_gateway_stage" {
+  description = "Stage to deploy to on API Gateway."
+  type        = string
+  default     = "dev"
+}
+
