@@ -3,12 +3,6 @@ output "lambda_bucket_id" {
   value       = module.storage.src_code_bucket_id
 }
 
-output "lambdafunc_function_name" {
-  description = "Name of the Lambda function."
-
-  value = module.lambda_func_1.function_name
-}
-
 output "APIGateway_base_url" {
   description = "Base URL for API Gateway stage."
 

@@ -14,8 +14,8 @@ variable "lambda_runtime" {
   default = "python3.9"
 }
 
-variable "lambda_handler" {
-  default = "lambda.handler"
+variable "lambda_timeout" {
+  default = 60
 }
 
 variable "api_gateway_stage" {

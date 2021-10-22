@@ -1,6 +1,7 @@
 # Deploy to AWS Lambda 
 
 cd terraform
+terraform fmt -recursive
 terraform init
 terraform plan
 export AWS_PROFILE=csx

@@ -131,4 +131,4 @@ dmypy.json
 .terraform
 *.lock.hcl
 
-lambda.zip
+*.zip

@@ -13,27 +13,33 @@ variable "lambda_runtime" {
 variable "lambda_handler" {
   type = string
 }
+variable "lambda_timeout" {
+  type    = string
+  default = 3
+}
 variable "lambda_function_output_path" {
-    type = string
+  type = string
 }
 variable "lambda_function_base64" {
-    type = string
+  type = string
 }
-
+variable "lambda_inline_policy" {
+  type = string
+}
 variable "api_gateway_route_key" {
-  type=string
+  type = string
 }
-variable "api-gateway-id" {
-  type=string
+variable "api_gateway_id" {
+  type = string
 }
-variable "api-gateway-execution-arn" {
-  type=string
+variable "api_gateway_execution_arn" {
+  type = string
 }
 
 resource "aws_s3_bucket_object" "lambda_function" {
-  bucket = "${var.src_code_bucket_id}"
+  bucket = var.src_code_bucket_id
 
-  key    = "${var.zip_name}"
+  key    = var.zip_name
   source = var.lambda_function_output_path
 
   etag = filemd5(var.lambda_function_output_path)
@@ -42,16 +48,17 @@ resource "aws_s3_bucket_object" "lambda_function" {
 resource "aws_lambda_function" "lambda_function" {
   function_name = var.function_name
 
-  s3_bucket = "${var.src_code_bucket_id}"
+  s3_bucket = var.src_code_bucket_id
   s3_key    = aws_s3_bucket_object.lambda_function.key
 
-  runtime = "${var.lambda_runtime}"
-  handler = "${var.lambda_handler}"
+  runtime = var.lambda_runtime
+  handler = var.lambda_handler
+  timeout = var.lambda_timeout
 
   source_code_hash = var.lambda_function_base64
 
-  role = aws_iam_role.lambda_exec.arn
-  depends_on           = [aws_s3_bucket_object.lambda_function]
+  role       = aws_iam_role.lambda_exec.arn
+  depends_on = [aws_s3_bucket_object.lambda_function]
 }
 
 resource "aws_cloudwatch_log_group" "lambda_function" {
@@ -61,7 +68,7 @@ resource "aws_cloudwatch_log_group" "lambda_function" {
 }
 
 resource "aws_iam_role" "lambda_exec" {
-  name = "${var.function_name}-role"
+  name = "${var.function_name}-lambda-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -78,19 +85,8 @@ resource "aws_iam_role" "lambda_exec" {
   inline_policy {
     name = "${var.function_name}-inline-policy"
 
-    policy = jsonencode({
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action   = [
-            "s3:ListAllMyBuckets"
-            ]
-          Effect   = "Allow"
-          Resource = "*"
-        },
-      ]
-    })
-  }  
+    policy = var.lambda_inline_policy
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_policy" {
@@ -102,7 +98,7 @@ resource "aws_iam_role_policy_attachment" "lambda_policy" {
 
 
 resource "aws_apigatewayv2_integration" "lambda_function" {
-  api_id = var.api-gateway-id
+  api_id = var.api_gateway_id
 
   integration_uri    = aws_lambda_function.lambda_function.invoke_arn
   integration_type   = "AWS_PROXY"
@@ -110,7 +106,7 @@ resource "aws_apigatewayv2_integration" "lambda_function" {
 }
 
 resource "aws_apigatewayv2_route" "lambda_function" {
-  api_id = var.api-gateway-id
+  api_id = var.api_gateway_id
 
   route_key = var.api_gateway_route_key
   target    = "integrations/${aws_apigatewayv2_integration.lambda_function.id}"
@@ -122,7 +118,7 @@ resource "aws_lambda_permission" "api_gw" {
   function_name = aws_lambda_function.lambda_function.function_name
   principal     = "apigateway.amazonaws.com"
 
-  source_arn = "${var.api-gateway-execution-arn}/*/*"
+  source_arn = "${var.api_gateway_execution_arn}/*/*"
 }
 
 output "function_name" {

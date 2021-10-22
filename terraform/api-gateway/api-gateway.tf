@@ -1,5 +1,5 @@
 variable "api_gateway_stage" {
-  type=string
+  type = string
 }
 
 resource "aws_apigatewayv2_api" "lambda" {
@@ -38,14 +38,14 @@ resource "aws_apigatewayv2_stage" "lambda" {
   }
 }
 
-output "api-gateway-id" {
+output "api_gateway_id" {
   description = "Id for the api gateway"
-  value = aws_apigatewayv2_api.lambda.id
+  value       = aws_apigatewayv2_api.lambda.id
 }
 
-output "api-gateway-execution-arn" {
+output "api_gateway_execution_arn" {
   description = "Execution arn for the api gateway"
-  value = aws_apigatewayv2_api.lambda.execution_arn
+  value       = aws_apigatewayv2_api.lambda.execution_arn
 }
 
 output "base_url" {
